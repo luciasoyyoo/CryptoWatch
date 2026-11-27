@@ -1,0 +1,307 @@
+@startuml
+interface cryptowatch.core.Subject {
+~ void attach(Observer<? super E>)
+~ void detach(Observer<? super E>)
+~ void notifyObservers(E)
+}
+
+class cryptowatch.model.Coin {
+- String id
+- String symbol
+- String name
+- double price
+- double change24h
+- double marketCap
+- double volume24h
+- double high24h
+- double low24h
+- List<Double> sparkline
++ double low24h()
++ String id()
++ double marketCap()
++ double price()
++ List<Double> sparkline()
++ String symbol()
++ String name()
++ double high24h()
++ double change24h()
++ double volume24h()
+}
+
+
+interface cryptowatch.model.MarketEvent {
+~ Instant at()
+}
+
+class cryptowatch.model.MarketEvent$Loading {
+- Instant at
++ Instant at()
+}
+
+
+class cryptowatch.model.MarketEvent$Updated {
+- List<Coin> coins
+- String source
+- String currency
+- Instant at
++ String source()
++ String currency()
++ Instant at()
++ List<Coin> coins()
+}
+
+
+class cryptowatch.model.MarketEvent$Failed {
+- String message
+- Instant at
++ String message()
++ Instant at()
+}
+
+
+class cryptowatch.ui.MainPanel {
+- List<CoinCard> cards
+- DetailPanel detail
+- void select(String)
+}
+
+
+class cryptowatch.data.DemoMarketSource {
+- {static} Map<String,Seed> SEEDS
+- {static} int POINTS
+- Random random
+- Map<String,List<Double>> series
++ List<Coin> fetch(List<String>,String)
+- List<Double> history(Seed)
++ String name()
+}
+
+
+class cryptowatch.data.DemoMarketSource$Seed {
+- String symbol
+- String name
+- double usd
+- double cap
+- double volume
++ double usd()
++ double volume()
++ double cap()
++ String symbol()
++ String name()
+}
+
+
+class cryptowatch.model.Alert {
+- String coinId
+- String coinName
+- String symbol
+- Kind kind
+- double changePct
+- double price
+- String currency
+- Instant at
++  SURGE
++  DROP
++ String coinName()
++ double changePct()
++ String coinId()
++ String currency()
++ Instant at()
++ double price()
++ String symbol()
++ Kind kind()
+}
+
+
+enum cryptowatch.model.Kind {
++  SURGE
++  DROP
+}
+
+class cryptowatch.ui.StatusBar {
+- PriceFeed feed
+- String text
+- Color color
+- LocalTime last
++ void update(MarketEvent)
+# void paintComponent(Graphics)
+}
+
+
+class cryptowatch.ui.Theme {
++ {static} Color BG
++ {static} Color PANEL
++ {static} Color PANEL2
++ {static} Color TEXT
++ {static} Color MUTED
++ {static} Color ACCENT
++ {static} Color UP
++ {static} Color DOWN
++ {static} Color AMBER
++ {static} int GAP
++ {static} Font font(int,float)
++ {static} void quality(Graphics2D)
++ {static} BufferedImage logoImage(int)
+}
+
+
+class cryptowatch.alerts.AlertService {
+- Map<String,Double> lastPrices
+- String context
+- double thresholdPct
++ void setThresholdPct(double)
++ double thresholdPct()
++ void update(MarketEvent)
+}
+
+
+class cryptowatch.data.MiniJson {
+- String s
+- int i
++ {static} Object parse(String)
++ {static} double num(Map<?,?>,String,double)
++ {static} String str(Map<?,?>,String,String)
+- Object value()
+- Map<String,Object> object()
+- List<Object> array()
+- String string()
+- Double number()
+- void word(String)
+- char next()
+- char peek()
+- void expect(char)
+- void ws()
+- IllegalArgumentException error(String)
+}
+
+
+class cryptowatch.ui.RefreshButton {
+- boolean loading
++ void update(MarketEvent)
+}
+
+
+class cryptowatch.ui.EdtObserver {
+- Observer<? super E> delegate
++ {static} EdtObserver<E> of(Observer<? super E>)
++ void update(E)
+}
+
+
+class cryptowatch.ui.DetailPanel {
+- Map<String,Coin> latest
+- String selected
+- String currency
++ void select(String)
++ void update(MarketEvent)
+# void paintComponent(Graphics)
+}
+
+
+abstract class cryptowatch.core.AbstractSubject {
+- List<Observer<? super E>> observers
++ void attach(Observer<? super E>)
++ void detach(Observer<? super E>)
++ void notifyObservers(E)
++ int observerCount()
+}
+
+
+interface cryptowatch.core.Observer {
+~ void update(E)
+}
+
+class cryptowatch.ui.LogPanel {
+- DefaultListModel<String> model
++ Observer<MarketEvent> marketObserver()
++ Observer<Alert> alertObserver()
+- void add(String,String)
+}
+
+
+class cryptowatch.ui.CoinCard {
+- String id
+- Coin coin
+- boolean selected
+- Consumer<String> onSelect
+- float flash
+- String currency
++ String coinId()
++ CoinCard onSelect(Consumer<String>)
++ void setSelected(boolean)
++ void update(MarketEvent)
+# void paintComponent(Graphics)
+- String currency()
+- String formatPrice(double)
+- void draw(Graphics2D,String,int,int,Color,float)
+}
+
+
+class cryptowatch.Main {
+- {static} List<String> COINS
++ {static} void main(String[])
+}
+
+
+interface cryptowatch.data.MarketDataSource {
+~ List<Coin> fetch(List<String>,String)
+~ String name()
+}
+
+class cryptowatch.data.PriceFeed {
+- List<String> ids
+- ScheduledExecutorService scheduler
+- MarketDataSource source
+- String currency
+- int intervalSeconds
+- Instant nextPoll
+- ScheduledFuture<?> task
++ void start()
++ void refreshNow()
++ void setSource(MarketDataSource)
++ void setCurrency(String)
++ void setIntervalSeconds(int)
++ long secondsUntilNext()
+- void schedule(long)
+- void poll()
+- String message(Exception)
++ void close()
+}
+
+
+class cryptowatch.data.CoinGeckoClient {
+- {static} String ENDPOINT
+- HttpClient http
+- String apiKey
++ List<Coin> fetch(List<String>,String)
++ {static} List<Coin> parse(String)
+- {static} String enc(String)
++ String name()
+}
+
+
+
+
+cryptowatch.model.MarketEvent +.. cryptowatch.model.MarketEvent$Loading
+cryptowatch.model.MarketEvent +.. cryptowatch.model.MarketEvent$Updated
+cryptowatch.model.MarketEvent +.. cryptowatch.model.MarketEvent$Failed
+cryptowatch.ui.JPanel <|-- cryptowatch.ui.MainPanel
+cryptowatch.data.MarketDataSource <|.. cryptowatch.data.DemoMarketSource
+cryptowatch.data.DemoMarketSource +.. cryptowatch.data.DemoMarketSource$Seed
+cryptowatch.core.Observer <|.. cryptowatch.ui.StatusBar
+cryptowatch.ui.JComponent <|-- cryptowatch.ui.StatusBar
+cryptowatch.core.Observer <|.. cryptowatch.alerts.AlertService
+cryptowatch.core.AbstractSubject <|-- cryptowatch.alerts.AlertService
+cryptowatch.core.Observer <|.. cryptowatch.ui.RefreshButton
+cryptowatch.ui.JButton <|-- cryptowatch.ui.RefreshButton
+cryptowatch.core.Observer <|.. cryptowatch.ui.EdtObserver
+cryptowatch.core.Observer <|.. cryptowatch.ui.DetailPanel
+cryptowatch.ui.JComponent <|-- cryptowatch.ui.DetailPanel
+cryptowatch.core.Subject <|.. cryptowatch.core.AbstractSubject
+cryptowatch.ui.JPanel <|-- cryptowatch.ui.LogPanel
+cryptowatch.core.Observer <|.. cryptowatch.ui.CoinCard
+cryptowatch.ui.JComponent <|-- cryptowatch.ui.CoinCard
+cryptowatch.data.AutoCloseable <|.. cryptowatch.data.PriceFeed
+cryptowatch.core.AbstractSubject <|-- cryptowatch.data.PriceFeed
+cryptowatch.data.MarketDataSource <|.. cryptowatch.data.CoinGeckoClient
+@enduml
